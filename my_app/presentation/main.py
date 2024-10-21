@@ -5,27 +5,63 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 from data.database import DataBaseAdapter
 from services.user_service import UserService
+from services.payment_service import PaymentService
 
 def main(db_adapter):
     user_service = UserService(db_adapter)
-    
+    payment_service = PaymentService(db_adapter)
+
     # Crear usuarios
-    user_1 = user_service.create_user("administrador", "Bob Marley")
-    user_2 = user_service.create_user("regular", "Paul McCartney")
-    
-    print(f"¨Usuarios nuevos {user_1.name} y {user_2.name}")
-    
-    # Mostrar usuarios creados
+    user_1 = user_service.create_user("administrador", "Bob Marley", "US", 50)
+    user_2 = user_service.create_user("regular", "Paul McCartney", "COP", 500000)
+    user_3 = user_service.create_user("regular", "John Lennon", "COP", 1000000)
+    user_4 = user_service.create_user("administrador", "Michael Jackson", "COP", 1000000)
+
+    # Listando los usuarios
+    print(f"Usuario nuevo {user_1.name} - Balance inicial: {user_1.balance}")
+    print(f"Usuario nuevo {user_2.name} - Balance inicial: {user_2.balance}")
+    print(f"Usuario nuevo {user_3.name} - Balance inicial: {user_3.balance}")
+    print(f"Usuario nuevo {user_4.name} - Balance inicial: {user_4.balance}")
+    print("")
+
+    # Payments
+    payment_1 = payment_service.create_payment("donacion", 10)
+    payment_service.pay(user_1, payment_1)
+
+    payment_2 = payment_service.create_payment("donacion", 20)
+    payment_service.pay(user_2, payment_2)
+
+    payment_3 = payment_service.create_payment("donacion", 50)
+    payment_service.pay(user_3, payment_3)
+
+    # Pago sin terminar
+    payment_4 = payment_service.create_payment("donacion", 100)
+
+    # Mostrar pagos creados
+    payments = payment_service.get_payments()
+
+    # Listando los pagos
+    print("Listado de pagos")
+    for (id, type, value, completed) in payments:
+        print(f"[{id}]: {value} {type} con estado {completed}")
+    print("")
+
+    # Listando el saldo de usuarios despues del pago
     users = user_service.get_users()
     print("Listado de usuarios")
-    for (id, type, user) in users:
+    for (id, type, user, currency, balance) in users:
         print(f"[{id}]: {user} con rol {type}.")
+        print(f"Moneda: {currency}. Balance: {balance}")
+    print("")
 
     db_adapter.close_connection()
 
 if __name__ == "__main__":
     db_adapter = DataBaseAdapter("users.db")
     db_adapter.execute_query(
-        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, type TEXT, name TEXT)"
+        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, type TEXT, name TEXT, currency TEXT, balance REAL)"
+    )
+    db_adapter.execute_query(
+        "CREATE TABLE IF NOT EXISTS payments (id INTEGER PRIMARY KEY, type TEXT, value REAL, status INTEGER)"
     )
     main(db_adapter)

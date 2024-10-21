@@ -15,6 +15,9 @@ class DataBaseAdapter:
         self.cursor.execute(query, params)
         # Me devuelve toda la data solicitada en el query anterior
         return self.cursor.fetchall()
+
+    def last_inserted_id(self):
+        return self.cursor.lastrowid
     
     def close_connection(self):
         self.connection.close()
