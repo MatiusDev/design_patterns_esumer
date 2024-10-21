@@ -10,4 +10,7 @@ Mi primer proyecto
 
 2. Ejecuta el archivo principal:
   ```bash
-  python my_app/main.py
+  python my_app/presentation/main.py
+```
+# Repositorio
+https://github.comMatiusDevdesign_patterns_esumer.git
