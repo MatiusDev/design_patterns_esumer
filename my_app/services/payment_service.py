@@ -1,6 +1,6 @@
 from design_patterns.factory import UserFactory, PaymentFactory, Payment, Donation
 from design_patterns.observer import PaymentObserver
-from design_patterns.adapter import CurrencyAdapterToUSD, CurrencyAdapterToCOP
+from design_patterns.adapter import CurrencyAdapter
 
 class PaymentService:
     def __init__(self, db_adapter) -> None:
@@ -17,32 +17,33 @@ class PaymentService:
         return payment
 
     def pay(self, user, payment):
-        if user.currency == "US":
-            if isinstance(payment, Donation):
-                user.balance = payment.donate(user.currency, user.balance)
-                self.db_adapter.execute_query(
-                    "UPDATE users SET balance = ? WHERE id = ?", (user.balance, user.id)
-                )
-            else:
-                raise ValueError("Tipo de pago no soportado.")
-        elif user.currency == "COP":
-            adapted_user = CurrencyAdapterToUSD(user)
+        try:
+            if payment.completed:
+                raise ValueError("El pago ya ha sido completado.")
+
+            currency_adapter = CurrencyAdapter(user)
+            adapted_user = currency_adapter.adapt_to_usd()
+
             if isinstance(payment, Donation):
                 adapted_user.balance = payment.donate(adapted_user.currency, adapted_user.balance)
-                adapted_user = CurrencyAdapterToCOP(adapted_user)
+                
+                if user.currency != "US":
+                    currency_adapter = CurrencyAdapter(adapted_user)
+                    adapted_user = currency_adapter.adapt_to_other_currency(user.currency)
+
                 self.db_adapter.execute_query(
                     "UPDATE users SET balance = ? WHERE id = ?", (adapted_user.balance, user.id)
                 )
             else:
                 raise ValueError("Tipo de pago no soportado.")
-        else:
-            raise ValueError("Moneda no soportada.")
-
-        self.db_adapter.execute_query(
-            "UPDATE payments SET status = ? WHERE id = ?", (payment.completed, payment.id)
-        )
-        self.observer.notify(f"El pago {payment.id} ha sido completado correctamente...")
-        return payment
+            self.db_adapter.execute_query(
+                "UPDATE payments SET status = ? WHERE id = ?", (payment.completed, payment.id)
+            )
+            self.observer.notify(f"El pago {payment.id} ha sido completado correctamente...")
+            return payment
+        except ValueError as e:
+            self.observer.notify(f"Error al procesar el pago: {str(e)}")
+            return None
     
     def get_payments(self):
         return self.db_adapter.fetch_data("SELECT * FROM payments")

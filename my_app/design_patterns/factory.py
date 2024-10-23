@@ -45,7 +45,7 @@ class Donation(Payment):
     
     def donate(self, currency, balance):
         if (currency != "US"):
-            return ValueError("La única moneda permitida es dolares")
+            return ValueError("La única moneda permitida para pagar es dolares")
         
         if (balance < self.value):
             return ValueError("No tienes fondos suficientes")
