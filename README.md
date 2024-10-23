@@ -13,4 +13,4 @@ Mi primer proyecto
   python my_app/presentation/main.py
 ```
 # Repositorio
-https://github.comMatiusDevdesign_patterns_esumer.git
+https://github.com/MatiusDev/design_patterns_esumer.git
