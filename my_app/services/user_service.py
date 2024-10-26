@@ -6,7 +6,7 @@ class UserService:
         self.db_adapter = db_adapter
         self.observer = UserObserver()
 
-    def create_user(self, user_type, name, currency, balance):
+    def create_user(self, user_type, name, currency = "US", balance = 0):
         user = UserFactory.create_user(user_type, name, currency, balance)
         self.db_adapter.execute_query(
 			"INSERT INTO users (type, name, currency, balance) values(?, ?, ?, ?)", (user_type, name, currency, balance)

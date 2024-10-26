@@ -1,3 +1,4 @@
 .idx/
 env/
 *.db
+__pycache__/

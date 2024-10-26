@@ -1,13 +1,13 @@
-from .factory import CommonUser
+from domain.user import CommonUser
 
 class CurrencyAdapter:
     COP_VALUE = 4263.90
     MX_VALUE = 19.96
 
-    def __init__(self, user: CommonUser) -> None:
+    def __init__(self, user: CommonUser) -> None: 
         self.user = user
 
-    def adapt_to_usd(self):
+    def adapt_to_usd(self): 
         adapted_user = self.user
         if (self.user.currency != "US"):
             balance = self.user.balance / self.COP_VALUE

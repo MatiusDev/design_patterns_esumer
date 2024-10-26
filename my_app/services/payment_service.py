@@ -1,6 +1,9 @@
-from design_patterns.factory import UserFactory, PaymentFactory, Payment, Donation
+from design_patterns.factory import UserFactory, PaymentFactory
 from design_patterns.observer import PaymentObserver
 from design_patterns.adapter import CurrencyAdapter
+
+from domain.payment import Donation
+from domain.user import CommonUser
 
 class PaymentService:
     def __init__(self, db_adapter) -> None:
@@ -16,10 +19,13 @@ class PaymentService:
         self.observer.notify(f"Se ha registrado un nuevo pago, transacción {payment.id}...")
         return payment
 
-    def pay(self, user, payment):
+    def pay(self, user: CommonUser, payment):
         try:
             if payment.completed:
                 raise ValueError("El pago ya ha sido completado.")
+
+            if not isinstance(user, CommonUser):
+                raise ValueError("Solo los usuarios regulares pueden realizar pagos.")
 
             currency_adapter = CurrencyAdapter(user)
             adapted_user = currency_adapter.adapt_to_usd()

@@ -12,16 +12,27 @@ def main(db_adapter):
     payment_service = PaymentService(db_adapter)
 
     # Crear usuarios
-    user_1 = user_service.create_user("administrador", "Bob Marley", "US", 50)
+    admin_user_1 = user_service.create_user("administrador", "Bob Marley")
+    user_1 = admin_user_1.assign_common_profile("US", 50)
+    user_service.update_user(user_1.id, user_1)
+
     user_2 = user_service.create_user("regular", "Paul McCartney", "COP", 500000)
     user_3 = user_service.create_user("regular", "John Lennon", "COP", 1000000)
-    user_4 = user_service.create_user("administrador", "Michael Jackson", "COP", 1000000)
+
+    admin_user_4 = user_service.create_user("administrador", "Michael Jackson")
+    user_4 = admin_user_4.assign_common_profile("COP", 1000000)
+    user_service.update_user(user_4.id, user_4)
+
+    admin_user_5 = user_service.create_user("administrador", "Freddy Mercury")
+    user_5 = admin_user_5.assign_common_profile("COP", 2000000)
+    user_service.update_user(user_5.id, user_5)
 
     # Listando los usuarios
     print(f"Usuario nuevo {user_1.name} - Balance inicial: {user_1.balance}")
     print(f"Usuario nuevo {user_2.name} - Balance inicial: {user_2.balance}")
     print(f"Usuario nuevo {user_3.name} - Balance inicial: {user_3.balance}")
     print(f"Usuario nuevo {user_4.name} - Balance inicial: {user_4.balance}")
+    print(f"Usuario nuevo {user_5.name} - Balance inicial: {user_5.balance}")
     print("")
 
     # Payments
@@ -34,8 +45,12 @@ def main(db_adapter):
     payment_3 = payment_service.create_payment("donacion", 50)
     payment_service.pay(user_3, payment_3)
 
-    # Pago sin terminar
     payment_4 = payment_service.create_payment("donacion", 100)
+    payment_service.pay(user_4, payment_4)
+
+    # Intento de pago con error, no se puede realizar el pago por ser administrador
+    payment_5 = payment_service.create_payment("donacion", 200)
+    payment_service.pay(admin_user_5, payment_5)
 
     # Mostrar pagos creados
     payments = payment_service.get_payments()
