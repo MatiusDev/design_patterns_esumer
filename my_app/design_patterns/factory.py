@@ -1,3 +1,8 @@
+# Patron de diseño Factory (Creacional)
+# Sirve para crear objetos de diferentes clases a través de una única fabrica (Fabrica de objetos)
+# En este caso usamos una fabrica de usuarios y una fabrica de pagos
+# y dentro de cada fabrica se crean los objetos de las clases correspondientes ayudandonos del tipo de usuario o de pago
+
 from domain.user import AdminUser, CommonUser
 from domain.payment import Donation
 
