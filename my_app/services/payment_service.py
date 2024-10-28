@@ -1,9 +1,11 @@
-from design_patterns.factory import UserFactory, PaymentFactory
 from design_patterns.observer import PaymentObserver
 from design_patterns.adapter import CurrencyAdapter
+from .utils.validation_service import validate_payment_type
 
 from domain.payment import Donation
 from domain.user import CommonUser
+
+from dtos.payment_dto import PaymentDTO
 
 class PaymentService:
     def __init__(self, db_adapter) -> None:
@@ -11,9 +13,11 @@ class PaymentService:
         self.observer = PaymentObserver()
         
     def create_payment(self, payment_type, value):
-        payment = PaymentFactory.create_payment(payment_type, value)
+        payment_dto = PaymentDTO(value)
+        factory = validate_payment_type(payment_type)
+        payment = factory.create_payment(payment_dto)
         self.db_adapter.execute_query(
-			"INSERT INTO payments (type, value, status) values(?, ?, ?)", (payment_type, value, payment.completed)
+			"INSERT INTO payments (type, value, status) values(?, ?, ?)", (payment_type, value, payment.completed())
 		)
         payment.id = self.db_adapter.last_inserted_id()
         self.observer.notify(f"Se ha registrado un nuevo pago, transacción {payment.id}...")
@@ -21,7 +25,7 @@ class PaymentService:
 
     def pay(self, user: CommonUser, payment):
         try:
-            if payment.completed:
+            if payment.completed():
                 raise ValueError("El pago ya ha sido completado.")
 
             if not isinstance(user, CommonUser):
@@ -31,7 +35,7 @@ class PaymentService:
             adapted_user = currency_adapter.adapt_to_usd()
 
             if isinstance(payment, Donation):
-                adapted_user.balance = payment.donate(adapted_user.currency, adapted_user.balance)
+                adapted_user.balance = payment.pay(adapted_user.currency, adapted_user.balance)
                 
                 if user.currency != "US":
                     currency_adapter = CurrencyAdapter(adapted_user)
@@ -43,7 +47,7 @@ class PaymentService:
             else:
                 raise ValueError("Tipo de pago no soportado.")
             self.db_adapter.execute_query(
-                "UPDATE payments SET status = ? WHERE id = ?", (payment.completed, payment.id)
+                "UPDATE payments SET status = ? WHERE id = ?", (payment.completed(), payment.id)
             )
             self.observer.notify(f"El pago {payment.id} ha sido completado correctamente...")
             return payment

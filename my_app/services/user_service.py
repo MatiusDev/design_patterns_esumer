@@ -1,5 +1,6 @@
-from design_patterns.factory import UserFactory
 from design_patterns.observer import UserObserver
+from dtos.user_dto import UserDTO
+from .utils.validation_service import validate_user_type
 
 class UserService:
     def __init__(self, db_adapter) -> None:
@@ -7,7 +8,14 @@ class UserService:
         self.observer = UserObserver()
 
     def create_user(self, user_type, name, currency = "US", balance = 0):
-        user = UserFactory.create_user(user_type, name, currency, balance)
+        # Se crea un DTO, ya que enviar los datos por separado en create_user representa un problema para la interfaz
+        # Ya que los diferentes usuarios manejan varios tipos de datos diferentes
+        # El DTO me permite transportar los datos y elegir que datos del objeto usar desde las clases
+        user_dto = UserDTO(name, currency, balance)
+        # Creo la fabrica dependiendo del tipo de usuario que se desee crear
+        factory = validate_user_type(user_type)
+        user = factory.create_user(user_dto)
+        
         self.db_adapter.execute_query(
 			"INSERT INTO users (type, name, currency, balance) values(?, ?, ?, ?)", (user_type, name, currency, balance)
 		)
